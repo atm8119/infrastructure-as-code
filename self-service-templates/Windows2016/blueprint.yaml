@@ -1,0 +1,30 @@
+name: TechElevate-Windows2016
+version: 1
+formatVersion: 1
+inputs: {}
+resources:
+  Cloud_Machine_1:
+    type: Cloud.Machine
+    properties:
+      image: windows
+      flavor: TechElevate_Win-Small_1CPU-4GB
+      constraints:
+        - tag: techelevate-PLACEMENT-vsphere-01a-workload-cluster
+      remoteAccess:
+        authentication: usernamePassword
+        username: Administrator
+        password: VMware1!
+      cloudConfig: |
+        #cloud-config
+        write_files:
+          content: Cloudbase-Init test
+          path: C:\test.txt
+        set_hostname: WindowsVM
+      networks:
+        - network: ${resource.NSX.id}
+  NSX:
+    type: Cloud.NSX.Network
+    properties:
+      networkType: routed
+      constraints:
+        - tag: techelevate-PLACEMENT-networkType:on-demand
