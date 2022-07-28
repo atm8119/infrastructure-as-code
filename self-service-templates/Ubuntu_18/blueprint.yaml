@@ -1,5 +1,5 @@
 name: TechElevate-Ubuntu_18 VM
-version: 1.1
+version: 1.1.1
 formatVersion: 1
 
 inputs:
@@ -63,7 +63,7 @@ resources:
           - echo $ip4 >> /tmp/environment.txt
           - echo "Done" >> /tmp/environment.txt
       constraints:
-        - tag: ${"env:" + to_lower(input.environment)}
+        - tag: '${input.environment == "vSphere" ? "techelevate-PLACEMENT-vsphere-01a--compute:workload-cluster-comp02" : ""}'
       networks:
         - name: ${resource.Cloud_Network_1.name}
           network: ${resource.Cloud_Network_1.id}
