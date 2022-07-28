@@ -1,5 +1,5 @@
 name: TechElevate-Ubuntu_18 VM
-version: 1
+version: 1.1
 formatVersion: 1
 
 inputs:
@@ -73,4 +73,4 @@ resources:
       name: Field-Demo
       networkType: existing
       constraints:
-        - tag: '${input.environment == "vSphere" ? "techelevate-PLACEMENT-vsphere-01a-workload-cluster" : ""}'
+        - tag: '${input.environment == "vSphere" ? "techelevate-PLACEMENT-vsphere-01a--network:vm-network" : ""}'
