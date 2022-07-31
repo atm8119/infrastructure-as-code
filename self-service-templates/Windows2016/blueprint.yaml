@@ -9,7 +9,7 @@ resources:
       image: TechElevate-Windows-16
       flavor: TechElevate_Slim-Medium_1CPU-4GB
       constraints:
-        - tag: techelevate-PLACEMENT-vsphere-01a-workload-cluster
+        - tag: techelevate-PLACEMENT-vsphere-01a--compute:workload-cluster-comp02
       remoteAccess:
         authentication: usernamePassword
         username: Administrator
