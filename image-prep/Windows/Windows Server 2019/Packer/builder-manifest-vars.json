@@ -1,0 +1,17 @@
+{
+    "vsphere_server": "<your vCenter FQDN>",
+    "vsphere_user": "administrator@vsphere.local",
+    "vsphere_password": "<vCenter password>",
+    "vsphere_template_name": "Win2019CoreClone",
+    "vsphere_folder": "Templates",
+    "vsphere_dc_name": "<Your DC Name>",
+    "vsphere_compute_cluster": "<Your Cluster name>"
+    "vsphere_portgroup_name": "<Your vSwitch portgroup label>",
+    "vsphere_datastore": "<Your datastore>",
+    "winadmin_password": "<your Windows password>",
+    "cpu_num": "4",
+    "mem_size": "4096",
+    "disk_size": "102400",
+    "os_iso_path": "[<your datastore>] ISO/en_windows_server_2019_updated_march_2019_x64_dvd_2ae967ab.iso",
+    "vmtools_iso_path":"[Your Datastore] ISO/windows.iso"
+}
