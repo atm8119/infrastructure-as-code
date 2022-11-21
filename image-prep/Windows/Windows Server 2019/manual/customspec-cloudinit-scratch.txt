@@ -1,0 +1,96 @@
+(1) Create the following Powershell script:
+
+	• LOCATION: 
+	    C:\opt\run_cloud-init_prep.ps1
+	• CONTENT:
+      Set-Service -Name 'cloudbase-init' -StartupType Automatic
+      Start-Service -Name 'cloudbase-init'
+
+(2) Run the following in Powershell:
+	
+	$cbiinstaller = "https://github.com/cloudbase/cloudbase-init/releases/download/1.1.2/CloudbaseInitSetup_1_1_2_x64.msi"
+  $cbiinstallfile = ("C:\opt\"+(($cbiinstaller).Split('/')[-1]))
+  Invoke-WebRequest -Uri $cbiinstaller -UseBasicParsing -OutFile $cbiinstallfile
+    $cloudinitarguments = @(
+      "/i",
+      $cbiinstallfile,
+      "SYSPREP=0",
+      "SYSPREPSHUTDOWN=0",
+      "RUN_SERVICE_AS_LOCAL_SYSTEM=1",
+      "USERNAME=Administrator",
+      "/qb"
+  )
+  Start-Process -FilePath 'msiexec.exe' -ArgumentList $cloudinitarguments -Wait
+  Set-Service -Name 'cloudbase-init' -StartupType Disabled
+
+Adjust cloudbase-init to be Automatic (Delayed Start) to avoid race conditions with other config tasks:
+
+	• sc.exe config cloudbase-init start= delayed-auto
+
+
+(4) Modify the Config files as follows:
+
+	notepad "C:\Program Files\Cloudbase_Solutions\Cloudbase_Init\conf\cloudbase-init-unattend.conf"
+	
+	CHANGE TO:
+    [DEFAULT]
+    username=Administrator
+    groups=Administrators
+    inject_user_password=true
+    config_drive_raw_hhd=true
+    config_drive_cdrom=true
+    config_drive_vfat=true
+    bsdtar_path=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\bin\bsdtar.exe
+    mtools_path=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\bin\
+    verbose=true
+    debug=true
+    logdir=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\log\
+    logfile=cloudbase-init-unattend.log
+    default_log_levels=comtypes=INFO,suds=INFO,iso8601=WARN,requests=WARN
+    logging_serial_port_settings=
+    mtu_use_dhcp_config=true
+    ntp_use_dhcp_config=true
+    local_scripts_path=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\LocalScripts\
+    metadata_services=cloudbaseinit.metadata.services.ovfservice.OvfService
+    plugins=cloudbaseinit.plugins.common.mtu.MTUPlugin,cloudbaseinit.plugins.common.sethostname.SetHostNamePlugin,cloudbaseinit.plugins.windows.extendvolumes.ExtendVolumesPlugin
+    allow_reboot=false
+    stop_service_on_exit=false
+    check_latest_version=false
+	
+	
+	notepad  "C:\Program Files\Cloudbase_Solutions\Cloudbase_Init\conf\cloudbase-init.conf"
+	
+	CHANGE TO: "C:\Program Files\Cloudbase_Solutions\Cloudbase_Init\conf\cloudbase-init.conf"
+		[DEFAULT]
+    username=Administrator
+    groups=Administrators
+    inject_user_password=true
+    first_logon_behaviour=no
+    config_drive_raw_hhd=true
+    config_drive_cdrom=true
+    config_drive_vfat=true
+    bsdtar_path=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\bin\bsdtar.exe
+    mtools_path=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\bin\
+    verbose=true
+    debug=true
+    logdir=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\log\
+    logfile=cloudbase-init.log
+    default_log_levels=comtypes=INFO,suds=INFO,iso8601=WARN,requests=WARN
+    logging_serial_port_settings=
+    mtu_use_dhcp_config=true
+    ntp_use_dhcp_config=true
+    local_scripts_path=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\LocalScripts\
+    metadata_services=cloudbaseinit.metadata.services.ovfservice.OvfService
+    plugins=cloudbaseinit.plugins.windows.createuser.CreateUserPlugin,cloudbaseinit.plugins.windows.setuserpassword.SetUserPasswordPlugin,cloudbaseinit.plugins.common.sshpublickeys.SetUserSSHPublicKeysPlugin,cloudbaseinit.plugins.common.userdata.UserDataPlugin
+
+
+(5) Run the following now to schedule Cloud-Init run:
+    $scheduledtaskaction = New-ScheduledTaskAction -Execute 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' -Argument 'C:\opt\run_cloud-init_prep.ps1'
+    $principal = New-ScheduledTaskPrincipal -RunLevel Highest -UserId 'NT AUTHORITY\SYSTEM'
+    $st = New-ScheduledTask -Action $scheduledtaskaction -Description 'Starts cloudbase-init after VMware guest customization' -Principal $principal
+    Register-ScheduledTask -TaskName 'cloudbase-init' -InputObject $st
+
+(6) Add the following to a Custom Spec being run on a VM:
+    C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NonInteractive -Command "Start-ScheduledTask -TaskName 'cloudbase-init'"
+    
+
