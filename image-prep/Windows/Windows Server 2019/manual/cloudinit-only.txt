@@ -1,0 +1,31 @@
+(1) Install VMtools
+    
+
+(2) Update Windows:
+
+    #Install PS Windows Update Module
+    Get-PackageProvider -name nuget -force
+    Install-Module PSWindowsUpdate -confirm:$false -force
+    Get-WindowsUpdate -Install -acceptall -IgnoreReboot
+
+(3) Configure Winrm and Remote exec
+      Set-ExecutionPolicy -ExecutionPolicy Bypass
+      winrm quickconfig -transport:http
+
+(4) New Firewall Rule for 445
+
+      New-NetFirewallRule -Name "SMB445" -DisplayName "SMB445" -Protocol TCP -LocalPort 445
+      Set-Item (dir wsman:\localhost\Listener\*\Port -Recurse).pspath 445 -Force
+      Restart-Service winrm
+      get-smbserverconfiguration | select EnableSMB2Protocol
+
+(5) UAC never notify
+
+      reg.exe ADD HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System /v EnableLUA /t REG_DWORD /d 0 /c
+
+(6) Choco and Git
+
+      Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+      choco install git -y --force
+
+(7) Cloudbase Init install
