@@ -21,7 +21,7 @@
 
 (5) UAC never notify
 
-      reg.exe ADD HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System /v EnableLUA /t REG_DWORD /d 0 /c
+      reg.exe ADD HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System /v EnableLUA /t REG_DWORD /d 0 /f
 
 (6) Choco and Git
 
