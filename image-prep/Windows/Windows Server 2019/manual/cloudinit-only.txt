@@ -49,8 +49,7 @@
                         Set-Service -Name 'cloudbase-init' -StartupType Disabled
                         
                {2} Option 2:
-                        $cbiinstallurl = "https://www.cloudbase.it/downloads/CloudbaseInitSetup_Stable_x64.msi"
-                        msiexec /qn /quiet /norestart /l*v log.txt /i $cbiinstaller USERNAME="Administrator" RUN_SERVICE_AS_LOCAL_SYSTEM=1
+                        msiexec /qn /quiet /norestart /l*v log.txt /i https://www.cloudbase.it/downloads/CloudbaseInitSetup_Stable_x64.msi USERNAME="Administrator" RUN_SERVICE_AS_LOCAL_SYSTEM=1 SYSPREPSHUTDOWN=0 SYSPREP=0
             
         [2] Mid-Install Configuration Settings
             
