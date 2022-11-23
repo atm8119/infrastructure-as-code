@@ -143,7 +143,7 @@ plugins=cloudbaseinit.plugins.windows.createuser.CreateUserPlugin,
 sc.exe config cloudbase-init start= delayed-auto
                
 [7.2.4] Sysprep Machine
-C:\windows\system32\sysprep\sysprep.exe /generalize /oobe /quiet /unattend: "C:\progra~1\cloudb~1\cloudb~1\conf\Unattend.xl" | Out-Null
+C:\windows\system32\sysprep\sysprep.exe /generalize /oobe /quiet /unattend: "C:\progra~1\cloudb~1\cloudb~1\conf\Unattend.xml" | Out-Null
 ipconfig /release
 shutdown /s /f /t 1
                         
