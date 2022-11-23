@@ -146,5 +146,7 @@ sc.exe config cloudbase-init start= delayed-auto
 C:\windows\system32\sysprep\sysprep.exe /generalize /oobe /quiet /unattend: "C:\progra~1\cloudb~1\cloudb~1\conf\Unattend.xml" | Out-Null
 ipconfig /release
 shutdown /s /f /t 1
+
+[8] Once VM is Shut Down, Detach the OS ISO from the VM.
                         
 
