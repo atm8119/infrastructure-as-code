@@ -25,128 +25,126 @@
 
 (6) Choco and Git
 
-      Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-      choco install git -y --force
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+choco install git -y --force
 
 (7) Cloudbase Init install
-        
-        [1] Installation Script
-            
-            {1} Option 1:
-                    	$cbiinstaller = "https://github.com/cloudbase/cloudbase-init/releases/download/1.1.2/CloudbaseInitSetup_1_1_2_x64.msi"
-                        $cbiinstallfile = ("C:\opt\"+(($cbiinstaller).Split('/')[-1]))
-                        Invoke-WebRequest -Uri $cbiinstaller -UseBasicParsing -OutFile $cbiinstallfile
-                            $cloudinitarguments = @(
-                            "/i",
-                            $cbiinstallfile,
-                            "SYSPREP=0",
-                            "SYSPREPSHUTDOWN=0",
-                            "RUN_SERVICE_AS_LOCAL_SYSTEM=1",
-                            "USERNAME=Administrator",
-                            "/qb"
-                        )
-                        Start-Process -FilePath 'msiexec.exe' -ArgumentList $cloudinitarguments -Wait
-                        Set-Service -Name 'cloudbase-init' -StartupType Disabled
+[7.1] Installation Script
+{7.1.1} Option 1:
+$cbiinstaller = "https://github.com/cloudbase/cloudbase-init/releases/download/1.1.2/CloudbaseInitSetup_1_1_2_x64.msi"
+$cbiinstallfile = ("C:\opt\"+(($cbiinstaller).Split('/')[-1]))
+Invoke-WebRequest -Uri $cbiinstaller -UseBasicParsing -OutFile $cbiinstallfile
+$cloudinitarguments = @(
+"/i",
+$cbiinstallfile,
+"SYSPREP=0",
+"SYSPREPSHUTDOWN=0",
+"RUN_SERVICE_AS_LOCAL_SYSTEM=1",
+"USERNAME=Administrator",
+"/qb"
+)
+Start-Process -FilePath 'msiexec.exe' -ArgumentList $cloudinitarguments -Wait
+Set-Service -Name 'cloudbase-init' -StartupType Disabled
                         
-               {2} Option 2:
-                        msiexec /qn /quiet /norestart /l*v log.txt /i https://www.cloudbase.it/downloads/CloudbaseInitSetup_Stable_x64.msi USERNAME="Administrator" RUN_SERVICE_AS_LOCAL_SYSTEM=1 SYSPREPSHUTDOWN=0 SYSPREP=0
+{7.1.2} Option 2:
+msiexec /qn /quiet /norestart /l*v log.txt /i https://www.cloudbase.it/downloads/CloudbaseInitSetup_Stable_x64.msi USERNAME="Administrator" RUN_SERVICE_AS_LOCAL_SYSTEM=1 SYSPREPSHUTDOWN=0 SYSPREP=0
             
-        [2] Mid-Install Configuration Settings
-            
-                {1} cloudbase-init-unattend.conf
-                    	notepad "C:\Program Files\Cloudbase_Solutions\Cloudbase_Init\conf\cloudbase-init-unattend.conf"
+[7.2] Mid-Install Configuration Settings
+{7.2.1} cloudbase-init-unattend.conf
+notepad "C:\Program Files\Cloudbase Solutions\Cloudbase-Init\conf\cloudbase-init-unattend.conf"
 	
-                            [DEFAULT]
-                            # Name of the user that will get created, group for that user.
-                            username=Administrator
-                            groups=Administrators
-                            inject_user_password=true
+[DEFAULT]
+# Name of the user that will get created, group for that user.
+username=Administrator
+groups=Administrators
+inject_user_password=true
 
-                            # Which devices to inspect for possible configuration drives.
-                            config_drive_raw_hhd=true
-                            config_drive_cdrom=true
-                            config_drive_vfat=true
+# Which devices to inspect for possible configuration drives.
+config_drive_raw_hhd=true
+config_drive_cdrom=true
+config_drive_vfat=true
 
-                            # Path to tar implementation from Ubuntu.
-                            bsdtar_path=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\bin\bsdtar.exe
-                            mtools_path=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\bin\
+# Path to tar implementation from Ubuntu.
+bsdtar_path=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\bin\bsdtar.exe
+mtools_path=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\bin\
 
-                            # Logging Configuration.
-                            debug=true
-                            log-dir=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\log\
-                            log-file=cloudbase-init-unattend.log
-                            default_log_levels=comtypes=INFO,suds=INFO,iso8601=WARN,requests=WARN
-                            logging_serial_port_settings=
+# Logging Configuration.
+debug=true
+log-dir=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\log\
+log-file=cloudbase-init-unattend.log
+default_log_levels=comtypes=INFO,suds=INFO,iso8601=WARN,requests=WARN
+logging_serial_port_settings=
 
-                            # Network and NTP settings (DHCP if true).
-                            mtu_use_dhcp_config=true
-                            ntp_use_dhcp_config=true
+# Network and NTP settings (DHCP if true).
+mtu_use_dhcp_config=true
+ntp_use_dhcp_config=true
 
-                            # Location of scripts to start during VM process.
-                            local_scripts_path=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\LocalScripts\
+# Location of scripts to start during VM process.
+local_scripts_path=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\LocalScripts\
 
-                            # Services for loading into VM.
-                            metadata_services=cloudbaseinit.metadata.services.ovfservice.OvfService
+# Services for loading into VM.
+metadata_services=cloudbaseinit.metadata.services.ovfservice.OvfService
 
-                            # Plugins to load.
-                            plugins=cloudbaseinit.plugins.common.mtu.MTUPlugin,
-                                cloudbaseinit.plugins.common.sethostname.SetHostNamePlugin,
-                                cloudbaseinit.plugins.windows.extendvolumes.ExtendVolumesPlugin
-                            # Miscellaneous
-                            allow_reboot=false
-                            stop_service_on_exit=false
-                            check_latest_version=false
+# Plugins to load.
+plugins=cloudbaseinit.plugins.common.mtu.MTUPlugin,
+	cloudbaseinit.plugins.common.sethostname.SetHostNamePlugin,
+	cloudbaseinit.plugins.windows.extendvolumes.ExtendVolumesPlugin
 
-                {2} cloudbase-init.conf
-                
-                        	notepad  "C:\Program Files\Cloudbase_Solutions\Cloudbase_Init\conf\cloudbase-init.conf"
+# Miscellaneous
+allow_reboot=false
+stop_service_on_exit=false
+check_latest_version=false
+
+{7.2.2} cloudbase-init.conf
+notepad  "C:\Program Files\Cloudbase Solutions\Cloudbase-Init\conf\cloudbase-init.conf"
 	
-                            [DEFAULT]
-                            # Name of the user that will get created, group for that user.
-                            username=Administrator
-                            groups=Administrators
-                            inject_user_password=true
-                            first_logon_behaviour=no
+[DEFAULT]
+# Name of the user that will get created, group for that user.
+username=Administrator
+groups=Administrators
+inject_user_password=true
+first_logon_behaviour=no
 
-                            # Which devices to inspect for possible configuration drives.
-                            config_drive_raw_hhd=true
-                            config_drive_cdrom=true
-                            config_drive_vfat=true
+# Which devices to inspect for possible configuration drives.
+config_drive_raw_hhd=true
+config_drive_cdrom=true
+config_drive_vfat=true
 
-                            # Path to tar implementation from Ubuntu.
-                            bsdtar_path=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\bin\bsdtar.exe
-                            mtools_path=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\bin\
+# Path to tar implementation from Ubuntu.
+bsdtar_path=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\bin\bsdtar.exe
+mtools_path=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\bin\
                             
-                            # Logging Configuration.
-                            debug=true
-                            log-dir=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\log\
-                            log-file=cloudbase-init.log
-                            default_log_levels=comtypes=INFO,suds=INFO,iso8601=WARN,requests=WARN
-                            logging_serial_port_settings=
+# Logging Configuration.
+debug=true
+log-dir=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\log\
+log-file=cloudbase-init.log
+default_log_levels=comtypes=INFO,suds=INFO,iso8601=WARN,requests=WARN
+logging_serial_port_settings=
                             
-                            # Network and NTP settings (DHCP if true).
-                            mtu_use_dhcp_config=true
-                            ntp_use_dhcp_config=true
+# Network and NTP settings (DHCP if true).
+mtu_use_dhcp_config=true
+ntp_use_dhcp_config=true
 
-                            # Location of scripts to start during VM process.
-                            local_scripts_path=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\LocalScripts\
+# Location of scripts to start during VM process.
+local_scripts_path=C:\Program Files\Cloudbase Solutions\Cloudbase-Init\LocalScripts\
 
-                            # Services for loading into VM.
-                            metadata_services=cloudbaseinit.metadata.services.ovfservice.OvfService
+# Services for loading into VM.
+metadata_services=cloudbaseinit.metadata.services.ovfservice.OvfService
 
-                            # Plugins to load.
-                            plugins=cloudbaseinit.plugins.windows.createuser.CreateUserPlugin,
-                                cloudbaseinit.plugins.windows.setuserpassword.SetUserPasswordPlugin,
-                                cloudbaseinit.plugins.common.sshpublickeys.SetUserSSHPublicKeysPlugin,
-                                cloudbaseinit.plugins.common.localscripts.LocalScriptsPlugin,
-                                cloudbaseinit.plugins.common.userdata.UserDataPlugin
+# Plugins to load.
+plugins=cloudbaseinit.plugins.windows.createuser.CreateUserPlugin,
+	cloudbaseinit.plugins.windows.setuserpassword.SetUserPasswordPlugin,
+	cloudbaseinit.plugins.common.sshpublickeys.SetUserSSHPublicKeysPlugin,
+	cloudbaseinit.plugins.common.localscripts.LocalScriptsPlugin,
+	cloudbaseinit.plugins.common.userdata.UserDataPlugin
                 
-        [3] Post-Install Configuration Settings
-                        sc.exe config cloudbase-init start= delayed-auto
+[7.2.3] Post-Install Configuration Settings
+sc.exe config cloudbase-init start= delayed-auto
                
-        [4] Sysprep Machine
-                        C:\windows\system32\sysprep\sysprep.exe /generalize /oobe /quiet /unattend: "C:\progra~1\cloudb~1\cloudb~1\conf\Unattend.xl"
-                        ipconfig /release
-                        shutdown /s /f /t 1
+[7.2.4] Sysprep Machine
+C:\windows\system32\sysprep\sysprep.exe /generalize /oobe /quiet /unattend: "C:\progra~1\cloudb~1\cloudb~1\conf\Unattend.xl"
+ipconfig /release
+shutdown /s /f /t 1
                         
 
