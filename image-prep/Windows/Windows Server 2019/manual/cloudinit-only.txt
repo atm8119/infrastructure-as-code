@@ -6,7 +6,7 @@
     #Install PS Windows Update Module
     Get-PackageProvider -name nuget -force
     Install-Module PSWindowsUpdate -confirm:$false -force
-    Get-WindowsUpdate -Install -acceptall -IgnoreReboot
+    Get-WindowsUpdate -Install -AcceptAll -AutoReboot
 
 (3) Configure Winrm and Remote exec
       Set-ExecutionPolicy -ExecutionPolicy Bypass
