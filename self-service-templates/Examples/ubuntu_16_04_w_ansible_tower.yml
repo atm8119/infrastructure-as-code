@@ -1,0 +1,59 @@
+formatVersion: 1
+name: Ubuntu 16.04 Base
+version: 1
+description: Cloud Agnostic Blueprint
+#-------------------------INPUTS-------------------------#
+inputs:
+  size:
+    type: string
+    oneOf:
+      - title: Small
+        const: small
+      - title: Medium
+        const: medium
+      - title: Large
+        const: large
+    default: small
+    title: Workload Size
+    description: Select Your Workload Size
+  environment:
+    type: string
+    description: Target Environment
+    title: Target Environment
+    oneOf:
+      - title: VCF (VMware Cloud Foundation)
+        const: env:vcf
+#-------------------------RESOURCES-------------------------#    
+resources:
+  Cloud_Ansible_Tower_1:
+    type: Cloud.Ansible.Tower
+    properties:
+      host: ${resource.Cloud_Machine_1.*}
+      hostVariables: |
+        example_var: 123
+      account: MOAD Ansible Tower
+      templates:
+        provision:
+          - name: Hello World
+            type: job
+            extraVars: '{"extraVarsKey" : "extraVarsValue"}'
+  Cloud_Machine_1:
+    type: Cloud.Machine
+    properties:
+      name: cloud-vm
+      image: ansible
+      flavor: ${input.size}
+      constraints:
+        - tag: ${input.environment}
+      networks:
+        - network: ${resource.Cloud_Network_1.id}
+      attachedDisks: []
+      userDefinedVariableString: ABCD
+      userDefinedVariableNumber: 1234
+  Cloud_Network_1:
+    type: Cloud.Network
+    properties:
+      name: cloud-network
+      networkType: existing
+      constraints:
+        - tag: ${input.environment}
