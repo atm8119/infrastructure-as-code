@@ -1,0 +1,64 @@
+formatVersion: 1
+inputs:
+  username:
+    type: string
+    description: The username you would like <br> to use for the installation.
+    default: demouser
+    title: SSH Username
+  password:
+    type: string
+    description: The password you would like <br> to use for the installation.
+    title: SSH Password
+    pattern: "[a-z0-9A-Z@#$]+"
+    encrypted: false
+    default: vRealiz3!
+resources:
+  Ubuntu:
+    type: Cloud.vSphere.Machine
+    properties:
+      name: web
+      flavor: medium
+      #imageRef: https://cloud-images.ubuntu.com/releases/18.04/release/ubuntu-18.04-server-cloudimg-amd64.ova
+      imageRef: https://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.ova
+      remoteAccess:
+        authentication: usernamePassword
+        username: ${input.username}
+        password: ${input.password}
+      tags:
+        - key: project
+          value: ${env.projectName}
+        - key: cost_center
+          value: engineering
+      constraints:
+        - tag: env:vcf
+      cloudConfig: |
+        ssh_pwauth: yes
+
+        chpasswd:
+          list: |
+            ${input.username}:${input.password}
+          expire: false
+          
+        users:
+          - default
+          - name: ${input.username}
+            lock_passwd: false
+            sudo: ['ALL=(ALL) NOPASSWD:ALL']
+            groups: [wheel, sudo, admin]
+            shell: '/bin/bash'
+            
+        write_files:
+          - path: /etc/hosts
+            content: 127.0.0.1 ${self.resourceName}
+            append: true
+            
+        runcmd:
+          - hostnamectl set-hostname ${self.resourceName}
+      networks:
+        - network: ${resource.Cloud_Network_1.id}
+  Cloud_Network_1:
+    type: Cloud.Network
+    properties:
+      networkType: existing
+      constraints:
+        - tag: env:vcf
