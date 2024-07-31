@@ -1,0 +1,106 @@
+# managed: alonso.trejo-mora@broadcom.com
+# ------------- Resources -------------
+# https://docs.vmware.com/en/VMware-Aria-Automation/8.17/Using-Automation-Assembler/GUID-9244FFDE-2039-48F6-9CB1-93508FCAFA75.html
+# https://www.youtube.com/watch?v=4fu1xxZXKxU
+# https://developer.broadcom.com/xapis/aria-automation-8.16-resource-type-schema/latest/data-structures/Cloud.Ansible/
+formatVersion: 2
+inputs:
+  hostname:
+    type: string
+    title: 'VM: Machine Name'
+    description: Name of VM
+    pattern: ^[A-Za-z0-9][A-Za-z0-9-]{0,14}$
+    maxLength: 15
+    minlength: 1
+  password:
+    type: string
+    title: 'VM: Password'
+    description: 'Password for VM with minimums: 2 upper, 3 lower, 1 special, 2 digits, length 8'
+    pattern: ^(?=.*[A-Z].*[A-Z])(?=.*[a-z].*[a-z].*[a-z])(?=.*[!@#$&*])(?=.*[0-9].*[0-9]).{8}$
+  db_name:
+    type: string
+    title: 'DB: Database Name'
+    description: Name of the PostgreSQL database to create
+  db_user:
+    type: string
+    title: 'DB: Database User'
+    description: Username for the PostgreSQL database
+  db_password:
+    type: string
+    title: 'DB: Database Password'
+    description: Password for the PostgreSQL database user
+    encrypted: true
+  postgresql_version:
+    type: string
+    title: 'DB: PostgreSQL Version'
+    description: Version of PostgreSQL to install
+    default: '13'
+resources:
+  Ansible_OSS:
+    type: Cloud.Ansible
+    properties:
+      # Execution Machine
+      account: ansible-control-machine
+      # -- access
+      username: job_execution_acct
+      privateKeyFile: ~/.ssh/id_rsa
+      # -- inventory
+      inventoryFile: /etc/ansible/hosts
+      hostName: ${input.hostname}
+      hostVariables:
+        ansible_user: ansible
+        ansible_ssh_private_key_file: ~/.ssh/id_rsa
+      groups:
+        - new_database_servers
+      # -- jobs
+      playbooks:
+        provision:
+          - '/path/to/playbook/setup_db_server.yml --extra-vars {"postgresql_version":${input.postgresql_version}, "db_name": ${input.db_name}, "db_user": ${input.db_user}, "db_password": ${input.db_password}'
+        de-provision:
+          - /path/to/playbook/remove_db_server.yml --extra-vars var1=valA var2=valB
+      # Target Machine
+      host: ${resource.Linux_VM.*}
+      osType: linux
+      # Connection
+      maxConnectionRetries: 3
+  Linux_VM:
+    type: Cloud.vSphere.Machine
+    properties:
+      image: ubuntu-20
+      cpuCount: 2
+      totalMemoryMB: 4096
+      networks:
+        - network: ${resource.vSphere_Net.id}
+      cloudConfig: |
+        hostname: ${input.hostname}
+
+        users:
+          - name: ansible
+            ssh-authorized-keys:
+            - ssh-rsa AAAA89MsaC3yc8OAAjDAAAJAAIFQoRT4948UFFIDCJO
+            sudo: ['ALL=(ALL) NOPASSWD: ALL']
+            groups: sudo
+            shell: /bin/bash
+          
+        packages:
+          - python3
+          - python3-pip
+
+        runcmd:
+          - pip3 install psycopg2-binary
+          
+  vSphere_Net:
+    type: Cloud.vSphere.Network
+    properties:
+      networkType: existing
+  # Ansible_Automation_Platform:
+  #   type: Cloud.Ansible.Tower
+  #   properties:
+  #     account: AnsibleIntegrationMachine
+  #     host: ${.*}
+  #     hostName: ManagedHostNameAddedToAnsibleInventory
+  #     hostVariables:
+  #       ansible_host: fmc-host.example.com # added to connect via FQDN
+  #     templates:
+  #       provision:
+  #         - extraVars: '{"rule_name" : ${input.rule_name}, "source_zone" : ${input.source_zone}, "destination_zone" : ${input.destination_zone}, "source_network" : ${input.source_network}, "destination_network" : ${input.destination_network}, "protocol" : ${input.protocol}, "destination_port" : ${input.destination_port}, "action" : ${input.action}}'
