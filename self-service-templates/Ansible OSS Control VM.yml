@@ -1,0 +1,83 @@
+formatVersion: 2
+inputs:
+  ansible_hostname:
+    type: string
+    title: "Ansible: Machine Name"
+    description: Name of Ansible control machine
+    pattern: ^[A-Za-z0-9][A-Za-z0-9-]{0,14}$
+    maxLength: 15
+    minlength: 1
+    default: ansible-control
+  ansible_username:
+    type: string
+    title: "Ansible: Username"
+    description: Create Username for access to Ansible machine.
+    pattern: ^[A-Za-z0-9][A-Za-z0-9-]{0,14}$
+    maxLength: 15
+    minlength: 1
+    default: ansible
+  ansible_password:
+    type: string
+    title: "Ansible: Password"
+    description: "Create Password for access to Ansible machine (with minimums: 2 upper, 3 lower, 1 special, 2 digits, length 10)"
+    pattern: ^(?=.*[A-Z].*[A-Z])(?=.*[a-z].*[a-z].*[a-z])(?=.*[!@#$&*])(?=.*[0-9].*[0-9]).{10}$
+    encrypted: true
+    default: VMware123!
+resources:
+  Ansible_Network:
+    type: Cloud.vSphere.Network
+    properties:
+      networkType: existing
+  Ansible_Control_VM:
+    type: Cloud.vSphere.Machine
+    properties:
+      imageRef: https://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.ova
+      cpuCount: 2
+      totalMemoryMB: 4096
+      remoteAccess:
+        authentication: usernamePassword
+        username: ${input.ansible_username}
+        password: ${input.ansible_password}
+      networks:
+        - network: ${resource.Ansible_Network.id}
+      cloudConfig: |
+        ssh_pwauth: yes
+
+        chpasswd:
+          list: |
+            ${input.ansible_username}:${input.ansible_password}
+          expire: false
+          
+        hostname: ${input.ansible_hostname}
+
+        users:
+          - default
+          - name: ${input.ansible_username}
+            lock_passwd: false
+            sudo: ['ALL=(ALL) NOPASSWD: ALL']
+            groups: [wheel, sudo, admin]
+            shell: /bin/bash
+            
+        write_files:
+          - path: /etc/hosts
+            content: 127.0.0.1 ${input.ansible_hostname}
+            append: true
+
+        packages:
+          - software-properties-common
+          - python3
+          - python3-pip
+
+        runcmd:
+          - hostnamectl set-hostname ${input.ansible_hostname}
+          - apt-add-repository --yes --update ppa:ansible/ansible
+          - apt install -y ansible
+          - pip3 install psycopg2-binary
+          - mkdir -p /etc/ansible
+          - echo "[defaults]" > /etc/ansible/ansible.cfg
+          - echo "host_key_checking = False" >> /etc/ansible/ansible.cfg
+          - ssh-keygen -t rsa -N "" -f /home/ansible/.ssh/id_rsa
+          - chown ansible:ansible /home/ansible/.ssh/id_rsa*
+outputs:
+  ansible_ssh_public_key:
+    value: ${resource.Ansible_Control_VM.customProperties.ssh_public_key}
