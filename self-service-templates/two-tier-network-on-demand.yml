@@ -1,0 +1,116 @@
+formatVersion: 1
+inputs: {}
+resources:
+  OC-Apache-Deny:
+    type: Cloud.SecurityGroup
+    properties:
+      securityGroupType: new
+      rules:
+        - name: Apache_Deny_All
+          access: Deny
+          direction: inbound
+  OC-MySQL-Deny:
+    type: Cloud.SecurityGroup
+    properties:
+      securityGroupType: new
+      rules:
+        - name: Apache_Deny_All
+          access: Deny
+          direction: inbound
+  OC-Apache-Allow:
+    type: Cloud.SecurityGroup
+    dependsOn:
+      - OC-Apache-Deny
+    properties:
+      securityGroupType: new
+      rules:
+        - name: Port_80_inbound
+          ports: 80
+          direction: inbound
+          protocol: TCP
+          source: ANY
+          access: Allow
+        - name: Admin_SSH
+          access: Allow
+          source: 10.0.0.201
+          service: SSH
+          direction: inbound
+        - name: Admin_ICMP
+          access: Allow
+          source: 10.0.0.201
+          service: ICMP-ALL
+          direction: inbound
+  OC-MySQL-Allow:
+    type: Cloud.SecurityGroup
+    dependsOn:
+      - OC-MySQL-Deny
+    properties:
+      securityGroupType: new
+      rules:
+        - name: Apache_to_SQL
+          ports: "3306"
+          access: Allow
+          source: ${resource["OC-Apache-Allow"].id}
+          protocol: TCP
+          direction: inbound
+        - name: Admin_SSH
+          access: Allow
+          source: 10.0.0.201
+          service: SSH
+          direction: inbound
+        - name: Admin_ICMP
+          access: Allow
+          source: 10.0.0.201
+          service: ICMP-ALL
+          direction: inbound
+  OC-Cloud-LB:
+    type: Cloud.NSX.LoadBalancer
+    properties:
+      routes:
+        - protocol: HTTP
+          port: 80
+          instanceProtocol: HTTP
+          instancePort: 80
+      network: ${resource["OC-Web-Cloud-Seg"].id}
+      instances: ${resource["OC-Apache-Service"][*].id}
+  OC-Apache-Service:
+    type: Cloud.vSphere.Machine
+    dependsOn:
+      - OC-MySQL-Service
+    properties:
+      count: 3
+      image: ""
+      cpuCount: 1
+      totalMemoryMB: 1024
+      constraints:
+        - tag: env:vsphere
+      networks:
+        - network: ${resource["OC-Web-Cloud-Seg"].id}
+          securityGroups:
+            - ${resource["OC-Apache-Allow"].id}
+  OC-MySQL-Service:
+    type: Cloud.vSphere.Machine
+    properties:
+      image: ""
+      cpuCount: 1
+      totalMemoryMB: 1024
+      constraints:
+        - tag: env:vsphere
+      networks:
+        - network: ${resource["OC-DB-Cloud-Seg"].id}
+          securityGroups:
+            - ${resource["OC-MySQL-Allow"].id}
+  OC-Web-Cloud-Seg:
+    type: Cloud.NSX.Network
+    properties:
+      networkType: routed
+      constraints:
+        - tag: DeploymentType:Holodeck
+        - tag: oc-cloud-network:oc-web
+  OC-DB-Cloud-Seg:
+    type: Cloud.NSX.Network
+    properties:
+      networkType: routed
+      constraints:
+        - tag: DeploymentType:Holodeck
+        - tag: oc-cloud-network:oc-db
